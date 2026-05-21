@@ -170,6 +170,7 @@
             <button class="nav-btn" data-page="weight">⚖️ Weight</button>
             <button class="nav-btn" data-page="plans">📋 Meal Plans</button>
             <button class="nav-btn" data-page="ai">🤖 AI Estimate</button>
+            <button class="nav-btn" data-page="settings">⚙️ Settings</button>
         </nav>
 
         <!-- Dashboard -->
@@ -270,6 +271,32 @@
             <video id="cameraVideo" autoplay playsinline></video>
             <div style="position:absolute;bottom:40px;left:50%;transform:translateX(-50%)">
                 <button class="btn btn-green" onclick="capturePhoto()" style="font-size:1.1rem;padding:16px 32px;border-radius:50px">📸 Capture</button>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="page" id="page-settings">
+            <div class="card">
+                <h2><span class="icon">💳</span> Payment Settings</h2>
+                <p style="color:var(--dim);font-size:.85rem;margin-bottom:12px">Your Razorpay key is stored <strong>only in your browser</strong> — never uploaded to GitHub or any server.</p>
+                <input class="search-input" id="razorpayKeyInput" placeholder="Paste your Razorpay Key ID (rzp_live_...)" style="margin-bottom:8px">
+                <div style="display:flex;gap:8px">
+                    <button class="btn btn-green" onclick="saveRazorpayKey()">💾 Save Key</button>
+                    <button class="btn btn-outline" onclick="clearRazorpayKey()">🗑️ Clear</button>
+                </div>
+                <p id="keyStatus" style="font-size:.75rem;margin-top:8px;color:var(--dim)"></p>
+            </div>
+            <div class="card">
+                <h2><span class="icon">🎯</span> Calorie Goals</h2>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                    <input class="search-input" id="goalCalInput" placeholder="Daily calories" type="number" value="2000">
+                    <div style="display:flex;gap:8px">
+                        <input class="search-input" id="goalPInput" placeholder="Protein (g)" type="number" value="150" style="flex:1">
+                        <input class="search-input" id="goalCInput" placeholder="Carbs (g)" type="number" value="250" style="flex:1">
+                        <input class="search-input" id="goalFInput" placeholder="Fat (g)" type="number" value="65" style="flex:1">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveGoals()">Save Goals</button>
+                </div>
             </div>
         </div>
     </div>
@@ -400,9 +427,52 @@
     function ymd(d){return(d||new Date()).toISOString().split('T')[0]}
 
     // ==================== RAZORPAY ====================
-    function initStripe(){
-        // Replace with your Razorpay Key ID from dashboard.razorpay.com
-        razorpayKey = 'rzp_test_xxxxxxxxxxxx';
+    function initStripe(){ // now reads from localStorage, never exposed in code
+        razorpayKey = localStorage.getItem('ct_razorpay_key') || null;
+        updateKeyStatus();
+    }
+
+    function updateKeyStatus(){
+        const el = document.getElementById('keyStatus');
+        const input = document.getElementById('razorpayKeyInput');
+        if(razorpayKey){
+            el.innerHTML = '✅ Key saved: '+razorpayKey.slice(0,8)+'...'+razorpayKey.slice(-4)+' <span style="color:#22c55e">(active)</span>';
+            input.value = razorpayKey;
+        } else {
+            el.innerHTML = '⚠️ No key set — payments will not work';
+            input.value = '';
+        }
+    }
+
+    function saveRazorpayKey(){
+        const key = document.getElementById('razorpayKeyInput').value.trim();
+        if(!key || !key.startsWith('rzp_')){
+            toast('⚠️ Invalid key. Must start with rzp_live_ or rzp_test_');
+            return;
+        }
+        localStorage.setItem('ct_razorpay_key', key);
+        razorpayKey = key;
+        updateKeyStatus();
+        toast('✅ Razorpay key saved! Payments are now active.');
+    }
+
+    function clearRazorpayKey(){
+        localStorage.removeItem('ct_razorpay_key');
+        razorpayKey = null;
+        updateKeyStatus();
+        toast('🗑️ Key removed');
+    }
+
+    function saveGoals(){
+        const cal = parseInt(document.getElementById('goalCalInput').value);
+        const p = parseInt(document.getElementById('goalPInput').value);
+        const c = parseInt(document.getElementById('goalCInput').value);
+        const f = parseInt(document.getElementById('goalFInput').value);
+        if(!cal||!p||!c||!f){toast('⚠️ Fill all goal fields');return;}
+        goals = {calories:cal,protein:p,carbs:c,fat:f};
+        saveState();
+        renderDashboard();
+        toast('✅ Goals updated!');
     }
 
     function startCheckout(){
@@ -458,7 +528,7 @@
         const banner=document.getElementById('freeBanner');
         if(paid){banner.style.display='none';}
         else if(daysLeft<=0){document.getElementById('paywall').classList.add('show');banner.style.display='none';}
-        else{banner.innerHTML=`<strong>⚠️ Free Trial — ${daysLeft} day${daysLeft>1?'s':''} remaining</strong>Unlock lifetime access for $4.99`;}
+        else{banner.innerHTML=`<strong>⚠️ Free Trial — ${daysLeft} day${daysLeft>1?'s':''} remaining</strong>Unlock lifetime access for ₹399`;}
     }
 
     // ==================== RENDER ====================
