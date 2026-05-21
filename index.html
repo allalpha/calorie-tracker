@@ -13,8 +13,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="CalTracker">
 
-    <!-- Stripe -->
-    <script src="https://js.stripe.com/v3/"></script>
+    <!-- Razorpay -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <!-- ZXing barcode scanner -->
@@ -174,7 +174,7 @@
 
         <!-- Dashboard -->
         <div class="page active" id="page-dash">
-            <div class="free-banner" id="freeBanner"><strong>⚠️ Free Trial — 3 days remaining</strong>Unlock lifetime access for $3.99</div>
+            <div class="free-banner" id="freeBanner"><strong>⚠️ Free Trial — 3 days remaining</strong>Unlock lifetime access for ₹399</div>
             <div class="card">
                 <h2><span class="icon">🔥</span> Today's Calories</h2>
                 <div class="calorie-ring">
@@ -279,7 +279,7 @@
         <div class="pay-card">
             <h2>🔥 CalorieTracker Pro</h2>
             <p style="color:var(--dim)">Lifetime Access — Pay Once</p>
-            <div class="price">$3.99<sub>/lifetime</sub></div>
+            <div class="price">₹399<sub>/lifetime</sub></div>
             <div class="features">
                 <div><span>✓</span> Unlimited food logging</div>
                 <div><span>✓</span> Macro tracking (protein, carbs, fat)</div>
@@ -289,7 +289,7 @@
                 <div><span>✓</span> Custom meal plans</div>
                 <div><span>✓</span> AI calorie estimates</div>
             </div>
-            <button class="pay-btn" id="stripeBtn" onclick="startCheckout()">💳 Pay $3.99 — Lifetime Access</button>
+            <button class="pay-btn" id="stripeBtn" onclick="startCheckout()">💳 Pay ₹399 — Lifetime Access</button>
             <p style="font-size:.7rem;color:var(--dim);margin-top:10px">One-time payment. No subscriptions. No hidden fees.</p>
         </div>
     </div>
@@ -364,6 +364,7 @@
     let trialStart = null;
     let goals = {calories:2000,protein:150,carbs:250,fat:65};
     let stripe = null;
+    let razorpayKey = null; // Razorpay key ID — paste your key here
     let cameraStream = null;
     let zxingReader = null;
 
@@ -398,22 +399,42 @@
 
     function ymd(d){return(d||new Date()).toISOString().split('T')[0]}
 
-    // ==================== STRIPE ====================
+    // ==================== RAZORPAY ====================
     function initStripe(){
-        // Replace with your real Stripe publishable key
-        stripe=Stripe('pk_test_placeholder');
+        // Replace with your Razorpay Key ID from dashboard.razorpay.com
+        razorpayKey = 'rzp_test_xxxxxxxxxxxx';
     }
 
-    async function startCheckout(){
-        toast('Stripe integration ready — connect your Stripe account to go live!');
-        // In production, create a Checkout Session on your backend, then:
-        // const {error}=await stripe.redirectToCheckout({sessionId:'...'});
-        // For now, simulate payment success for demo:
-        paid=true;saveState();
-        document.getElementById('paywall').classList.remove('show');
-        document.getElementById('freeBanner').style.display='none';
-        renderAll();updateNav();
-        toast('✅ Payment successful! Lifetime access unlocked!');
+    function startCheckout(){
+        if(!razorpayKey || razorpayKey.includes('xxx')){
+            toast('🔑 Paste your Razorpay Key ID first. Sign up at razorpay.com — it\\'s free!');
+            return;
+        }
+        var options = {
+            key: razorpayKey,
+            amount: 39900, // ₹399 in paise
+            currency: 'INR',
+            name: 'CalorieTracker Pro',
+            description: 'Lifetime Access',
+            image: 'https://allalpha.github.io/calorie-tracker/icon-512.png',
+            prefill: { name: '', email: '' },
+            theme: { color: '#22c55e' },
+            handler: function(response){
+                paid = true; saveState();
+                document.getElementById('paywall').classList.remove('show');
+                document.getElementById('freeBanner').style.display = 'none';
+                renderAll(); updateNav();
+                toast('✅ Payment successful! Lifetime access unlocked!');
+            },
+            modal: {
+                ondismiss: function(){ toast('Payment cancelled'); }
+            }
+        };
+        var rzp = new Razorpay(options);
+        rzp.on('payment.failed', function(resp){
+            toast('❌ Payment failed. Please try again.');
+        });
+        rzp.open();
     }
 
     // ==================== NAV ====================
