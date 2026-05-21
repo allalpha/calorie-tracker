@@ -174,7 +174,7 @@
 
         <!-- Dashboard -->
         <div class="page active" id="page-dash">
-            <div class="free-banner" id="freeBanner"><strong>⚠️ Free Trial — 7 days remaining</strong>Unlock lifetime access for $4.99</div>
+            <div class="free-banner" id="freeBanner"><strong>⚠️ Free Trial — 3 days remaining</strong>Unlock lifetime access for $3.99</div>
             <div class="card">
                 <h2><span class="icon">🔥</span> Today's Calories</h2>
                 <div class="calorie-ring">
@@ -279,7 +279,7 @@
         <div class="pay-card">
             <h2>🔥 CalorieTracker Pro</h2>
             <p style="color:var(--dim)">Lifetime Access — Pay Once</p>
-            <div class="price">$4.99<sub>/lifetime</sub></div>
+            <div class="price">$3.99<sub>/lifetime</sub></div>
             <div class="features">
                 <div><span>✓</span> Unlimited food logging</div>
                 <div><span>✓</span> Macro tracking (protein, carbs, fat)</div>
@@ -289,7 +289,7 @@
                 <div><span>✓</span> Custom meal plans</div>
                 <div><span>✓</span> AI calorie estimates</div>
             </div>
-            <button class="pay-btn" id="stripeBtn" onclick="startCheckout()">💳 Pay $4.99 — Lifetime Access</button>
+            <button class="pay-btn" id="stripeBtn" onclick="startCheckout()">💳 Pay $3.99 — Lifetime Access</button>
             <p style="font-size:.7rem;color:var(--dim);margin-top:10px">One-time payment. No subscriptions. No hidden fees.</p>
         </div>
     </div>
@@ -433,7 +433,7 @@
     }
 
     function updateNav(){
-        const daysLeft=trialStart?Math.max(0,7-Math.floor((Date.now()-trialStart)/86400000)):0;
+        const daysLeft=trialStart?Math.max(0,3-Math.floor((Date.now()-trialStart)/86400000)):0;
         const banner=document.getElementById('freeBanner');
         if(paid){banner.style.display='none';}
         else if(daysLeft<=0){document.getElementById('paywall').classList.add('show');banner.style.display='none';}
