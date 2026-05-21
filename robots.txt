@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://allalpha.github.io/calorie-tracker/sitemap.xml
